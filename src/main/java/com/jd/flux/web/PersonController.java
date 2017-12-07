@@ -1,13 +1,23 @@
 package com.jd.flux.web;
 
 import com.jd.flux.bean.Person;
+import com.jd.flux.hadler.PersonHandler;
 import com.jd.flux.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
 import java.util.Objects;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+
 
 /**
  * @author: wangyingjie1
@@ -21,6 +31,14 @@ public class PersonController {
     @Autowired
     private PersonService personService;
 
+    @Autowired
+    private PersonHandler personHandler;
+
+    @GetMapping("/hello")
+    public String handle() {
+        return "Hello WebFlux";
+    }
+
     @GetMapping("/{id}")
     public Person getPerson(@PathVariable Integer id) {
         // ...
@@ -30,16 +48,20 @@ public class PersonController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void add(/*@RequestBody*/ Person person) {
+    public Mono<Person> add(/*@RequestBody*/ Person person) {
         // ...
         if (Objects.isNull(person)) {
-            return;
+            return Mono.empty();
         }
 
-        personService.add(person);
+        System.out.println("xxxxxxx");
+
+        Person addPerson = personService.add(person);
+
+        return Mono.just(addPerson);
     }
 
-    @PostMapping
+    @PostMapping("/addJson")
     @ResponseStatus(HttpStatus.CREATED)
     public void addJson(@RequestBody Person person) {
         // ...
@@ -49,4 +71,17 @@ public class PersonController {
 
         personService.add(person);
     }
+
+    @GetMapping(path = "/pets/{id}", produces = "application/json;charset=UTF-8")
+    @ResponseBody
+    public Person getPet(@PathVariable int id) {
+        return personService.getById(id);
+    }
+
+    @GetMapping(path = "/list")
+    public Mono<ServerResponse> getPersonList(ServerRequest request) {
+
+        return personHandler.listPeople(request);
+    }
+
 }
