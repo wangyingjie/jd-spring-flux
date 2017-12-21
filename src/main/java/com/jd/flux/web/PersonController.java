@@ -7,11 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -84,4 +88,13 @@ public class PersonController {
         return personHandler.listPeople(request);
     }
 
+    @RequestMapping(value = "/sendVoice", method = RequestMethod.POST)
+    public Flux<Map<String, String>> receiveVoice(@RequestParam MultipartFile fileData) {
+        String fileName = fileData.getOriginalFilename();
+
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", "ファイルを受領しました。： " + fileName);
+
+        return Flux.just(payload);
+    }
 }
